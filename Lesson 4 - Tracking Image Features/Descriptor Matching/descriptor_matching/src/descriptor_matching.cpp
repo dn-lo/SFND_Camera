@@ -32,7 +32,8 @@ void matchDescriptors(cv::Mat &imgSource, cv::Mat &imgRef, vector<cv::KeyPoint> 
             descRef.convertTo(descRef, CV_32F);
         }
 
-        //... TODO : implement FLANN matching
+        //implement FLANN matching
+        matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
         cout << "FLANN matching";
     }
 
@@ -47,10 +48,22 @@ void matchDescriptors(cv::Mat &imgSource, cv::Mat &imgRef, vector<cv::KeyPoint> 
     }
     else if (selectorType.compare("SEL_KNN") == 0)
     { // k nearest neighbors (k=2)
+        vector< vector<cv::DMatch> > knnMatches;
+        double t = (double)cv::getTickCount();
 
-        // TODO : implement k-nearest-neighbor matching
+        // implement k-nearest-neighbor matching
+        matcher->knnMatch(descSource, descRef, knnMatches, 2);
+        // filter matches using descriptor distance ratio test
+        const float ratio_thresh = 0.8f;
+        for (auto knnMatch : knnMatches)
+        {
+            if (knnMatch[0].distance < ratio_thresh * knnMatch[1].distance)
+                matches.push_back(knnMatch[0]);
+        }
+        t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+        cout << " (KNN) with n=" << matches.size() << " matches in " << 1000 * t / 1.0 << " ms" << endl;
+        cout << "# keypoints removed = " << knnMatches.size() - matches.size() << endl;
 
-        // TODO : filter matches using descriptor distance ratio test
     }
 
     // visualize results
@@ -78,8 +91,8 @@ int main()
     readDescriptors("../dat/C35A5_DescRef_BRISK_large.dat", descRef);
 
     vector<cv::DMatch> matches;
-    string matcherType = "MAT_BF"; 
-    string descriptorType = "DES_BINARY"; 
-    string selectorType = "SEL_NN"; 
+    string matcherType = "MAT_BF"; // MAT_BF, MAT_FLANN
+    string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
+    string selectorType = "SEL_KNN"; // SEL_NN, SEL_KNN
     matchDescriptors(imgSource, imgRef, kptsSource, kptsRef, descSource, descRef, matches, descriptorType, matcherType, selectorType);
 }
