@@ -25,17 +25,15 @@ void detKeypoints1()
 
     vector<cv::KeyPoint> kptsShiTomasi;
     vector<cv::Point2f> corners;
-    double t = (double)cv::getTickCount();
+    auto tSta = std::chrono::steady_clock::now();
     cv::goodFeaturesToTrack(imgGray, corners, maxCorners, qualityLevel, minDistance, cv::Mat(), blockSize, useHarris, k);
-    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << "Shi-Tomasi with n= " << corners.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    auto tEnd = std::chrono::steady_clock::now();
+  	auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(tEnd - tSta);
+    cout << "Shi-Tomasi with n = " << corners.size() << " keypoints in " << dt.count() << " ms" << endl;
 
-    for (auto it = corners.begin(); it != corners.end(); ++it)
+    for (auto point : corners)
     { // add corners to result vector
-
-        cv::KeyPoint newKeyPoint;
-        newKeyPoint.pt = cv::Point2f((*it).x, (*it).y);
-        newKeyPoint.size = blockSize;
+        cv::KeyPoint newKeyPoint(point, blockSize);
         kptsShiTomasi.push_back(newKeyPoint);
     }
 
@@ -45,12 +43,35 @@ void detKeypoints1()
     string windowName = "Shi-Tomasi Results";
     cv::namedWindow(windowName, 1);
     imshow(windowName, visImage);
+    cv::waitKey(0);
 
-    // TODO: use the OpenCV library to add the FAST detector
+    // use the OpenCV library to add the FAST detector
     // in addition to the already implemented Shi-Tomasi 
     // detector and compare both algorithms with regard to 
     // (a) number of keypoints, (b) distribution of 
     // keypoints over the image and (c) processing speed.
+    int threshold = 30;  // difference between intensity of the central pixel and pixels of a circle around this pixel
+    bool bNMS = true;                   // perform non-maxima suppression on keypoints
+    cv::FastFeatureDetector::DetectorType type = cv::FastFeatureDetector::TYPE_9_16; // TYPE_9_16, TYPE_7_12, TYPE_5_8
+    cv::Ptr<cv::FeatureDetector> fast = cv::FastFeatureDetector::create(threshold, bNMS, type);
+    vector<cv::KeyPoint> kptsFast;
+
+    tSta = std::chrono::steady_clock::now();
+    fast->detect(imgGray, kptsFast, cv::Mat());
+    tEnd = std::chrono::steady_clock::now();
+  	dt = std::chrono::duration_cast<std::chrono::milliseconds>(tEnd - tSta);
+    cout << "FAST detector with n = " << kptsFast.size() << " keypoints in " << dt.count() << " ms" << endl;
+
+    // visualize results
+    cv::Mat visImageFast = img.clone();
+    cv::drawKeypoints(img, kptsFast, visImageFast, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+    windowName = "FAST detector Results";
+    cv::namedWindow(windowName, 1);
+    imshow(windowName, visImageFast);
+    cv::waitKey(0);
+
+
+
 }
 
 int main()

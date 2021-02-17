@@ -4,6 +4,7 @@
 
 
 using namespace std;
+typedef unsigned char uchar;
 
 void changePixels()
 {
@@ -16,7 +17,8 @@ void changePixels()
     for (int r = 230; r < 250; r++)
     {
         // STUDENT TASK : loop over all columns and set matrix elements to 255
-
+        for (int c = 0; c < m1_8u.cols; c++)
+            m1_8u.at<uchar>(r, c) = 255;
     }
 
     // show result
