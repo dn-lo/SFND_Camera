@@ -68,7 +68,7 @@ void showLidarTopview(std::vector<LidarPoint> &lidarPoints, cv::Size worldSize, 
     cv::waitKey(0); // wait for key to be pressed
 }
 
-// TODO - Add your code inside this function
+// Add your code inside this function
 void clusterLidarWithROI(std::vector<BoundingBox> &boundingBoxes, std::vector<LidarPoint> &lidarPoints)
 {
     // store calibration data in OpenCV matrices
@@ -106,19 +106,15 @@ void clusterLidarWithROI(std::vector<BoundingBox> &boundingBoxes, std::vector<Li
             smallerBox.width = (*it2).roi.width * (1 - shrinkFactor);
             smallerBox.height = (*it2).roi.height * (1 - shrinkFactor);
 
-            // check wether point is within current bounding box
+            // check wether point is within current bounding box. If so, add it to the enclosing boxes
             if (smallerBox.contains(pt))
-            {
-                it2->lidarPoints.push_back(*it1);
-                lidarPoints.erase(it1);
-                it1--;
-                break;
-            }
+                enclosingBoxes.push_back(it2);
         } // eof loop over all bounding boxes
         
-      // TODO - check wether point has been enclosed by one or by multiple boxes. 
-      // Accordingly, add Lidar point to bounding box
-
+        // Check wether point has been enclosed by one or by multiple boxes. 
+        // Accordingly, add Lidar point to bounding box
+        if (enclosingBoxes.size() == 1)
+            enclosingBoxes[0]->lidarPoints.push_back(*it1);
     } // eof loop over all Lidar points
 }
 

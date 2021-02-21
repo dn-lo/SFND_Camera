@@ -13,7 +13,9 @@ using namespace std;
 void detectObjects2()
 {
     // load image from file
-    cv::Mat img = cv::imread("../images/s_thrun.jpg");
+    cv::Mat img = cv::imread("../images/0000000000.png");
+
+    double t = (double)cv::getTickCount();
 
     // load class names from file
     string yoloBasePath = "../dat/yolo/";
@@ -34,7 +36,7 @@ void detectObjects2()
     // generate 4D blob from input image
     cv::Mat blob;
     double scalefactor = 1/255.0;
-    cv::Size size = cv::Size(416, 416);
+    cv::Size size = cv::Size(608, 608);
     cv::Scalar mean = cv::Scalar(0,0,0);
     bool swapRB = false;
     bool crop = false;
@@ -105,7 +107,9 @@ void detectObjects2()
         bBoxes.push_back(bBox);
     }
     
-    
+    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    cout << "YOLO detection with size" << size << " in " << 1000 * t / 1.0 << " ms" << endl;
+
     // show results
     cv::Mat visImg = img.clone();
     for (auto it = bBoxes.begin(); it != bBoxes.end(); ++it)
